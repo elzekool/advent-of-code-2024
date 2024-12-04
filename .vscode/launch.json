@@ -1,0 +1,11 @@
+{
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch current script",
+            "program": "${file}",
+            "cwd": "${fileDirname}"
+        }
+    ]
+}
