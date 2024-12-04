@@ -38,11 +38,11 @@ searches.forEach((search) => {
     let [ x, y, dirX, dirY ] = search;
     
     for (let i = 0; i < text.length; i++) {
-        let check_x = x + (dirX * i);
-        let check_y = y + (dirY * i);
+        const checkX = x + (dirX * i);
+        const checkY = y + (dirY * i);
         if (
-            !inBound(check_x, check_y) ||
-            matrix[check_x][check_y] !== text[i]
+            !inBound(checkX, checkY) ||
+            matrix[checkX][checkY] !== text[i]
         ) {
             return;
         }
