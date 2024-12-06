@@ -3,13 +3,7 @@ const input = fs.readFileSync('input.txt', 'utf8').replace('\r', '').trim();
 
 const matrix = input.split('\n').map((row) => row.split(''));
 
-let directionIdx = 0;
-let directions = [ 
-    [ -1,  0, ],
-    [  0,  1, ],
-    [  1,  0, ],
-    [  0, -1, ],
-];
+let direction = [ -1, 0 ];
 
 const width = matrix[0].length;
 const height = matrix.length;
@@ -30,8 +24,6 @@ let visited = 1;
 let found = false;
 
 while(found === false) {
-    const direction = directions[directionIdx];
-
     while(true) {
         const newX = position[0] + direction[0];
         const newY = position[1] + direction[1];
@@ -53,7 +45,7 @@ while(found === false) {
         position = [newX, newY];        
     }
 
-    directionIdx = (directionIdx + 1) % directions.length;
+    direction = [ direction[1], 0-direction[0] ];
 }
 
 console.log(visited);

@@ -3,53 +3,62 @@ const input = fs.readFileSync('input.txt', 'utf8').replace('\r', '').trim();
 
 const matrix = input.split('\n').map((row) => row.split(''));
 
-let directionIdx = 0;
-let directions = [ 
-    [ -1,  0, ],
-    [  0,  1, ],
-    [  1,  0, ],
-    [  0, -1, ],
-];
-
 const width = matrix[0].length;
 const height = matrix.length;
 
 const inBound = (x, y) => x >= 0 && y >= 0 && x < width && y < height;
 
 let initialPosition = [ 0, 0 ];
-let position = [ 0, 0 ];
 for (let x = 0; x < width; x++) {
     for (let y = 0; y < height; y++) {
         if (matrix[x][y] === '^') {
-            matrix[x][y] = directionIdx;
-            position = [ x, y ];
+            matrix[x][y] = 0;
             initialPosition = [ x, y ];
         }
     }
 }
 
-let blocks = 0;
+// First fill the field with positions the player visits
+(() => {
+    let found = false;
+    let direction = [ -1, 0 ];
+    let position = initialPosition;
+    while(found === false) {
+        while(true) {
+            const newX = position[0] + direction[0];
+            const newY = position[1] + direction[1];
+            if (!inBound(newX, newY)) {
+                found = true;
+                break
+            }    
+            if (matrix[newX][newY] === '#') {
+                break;
+            }
+            matrix[newX][newY] = 'X';
+            position = [newX, newY];        
+        }
+        direction = [ direction[1], 0-direction[0] ];
+    }
+})();
 
-// We are lazy, just try every position
-// We could optimize this by first doing a run and then only
-// check the places the guard normally visits
+let blocks = 0;
 for (let x = 0; x < width; x++) {
     for (let y = 0; y < height; y++) {
-        if (matrix[x][y] !== '.') {
+        // Check if the player ever visits that position
+        if (matrix[x][y] !== 'X') {
             continue;
         }
 
         let found = false;
 
-        directionIdx = 0;
-        position = initialPosition;
-        const testMatrix = [ ...matrix.map(line => [ ...line ])];
+        let directionId = 0;
+        let direction = [ -1, 0 ];
+        let position = initialPosition;
+        const testMatrix = matrix.map(line => [ ...line ]);
 
         testMatrix[x][y] = '#';
 
         while(found === false) {
-            const direction = directions[directionIdx];
-            
             while(true) {
                 const newX = position[0] + direction[0];
                 const newY = position[1] + direction[1];
@@ -63,7 +72,7 @@ for (let x = 0; x < width; x++) {
             
                 // If we are traveling in the same direction we are
                 // in a loop
-                if (val === directionIdx) {
+                if (val === directionId) {
                     blocks++;
                     found = true;
                     break;
@@ -73,12 +82,13 @@ for (let x = 0; x < width; x++) {
                     break;
                 }
         
-                testMatrix[newX][newY] = directionIdx;
+                testMatrix[newX][newY] = directionId;
         
                 position = [newX, newY];        
             }
         
-            directionIdx = (directionIdx + 1) % directions.length;
+            direction = [ direction[1], 0-direction[0] ];
+            directionId = (directionId + 1) % 4;
         }
     }
 }
