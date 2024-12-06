@@ -12,110 +12,139 @@ func main() {
 
 	width := len(lines[0])
 	height := len(lines)
+	matrixSize := width * height
+
+	coord := func(x, y int) int {
+		return (x*width + y)
+	}
+
+	inBounds := func(x, y int) bool {
+		return x >= 0 && y >= 0 && x < width && y <= height
+	}
+
+	rotate90Deg := func(direction []int) []int {
+		return []int{direction[1], 0 - direction[0]}
+	}
 
 	initalPosition := []int{0, 0}
 
-	matrix := make([][]rune, len(lines))
-	for i := range matrix {
-		matrix[i] = make([]rune, len(lines[i]))
-		for j := range lines[i] {
-			matrix[i][j] = []rune(lines[i])[j]
-			if matrix[i][j] == '^' {
-				initalPosition[0] = i
-				initalPosition[1] = j
+	matrix := make([]rune, matrixSize)
+	for y := range lines {
+		for x := range lines[y] {
+			c := coord(x, y)
+			matrix[c] = []rune(lines[x])[y]
+			if matrix[c] == '^' {
+				initalPosition[0] = x
+				initalPosition[1] = y
 			}
 		}
 	}
 
-	// Let the guard walk one initial time
+	var visitedCoords [][]int
+
+	// Perform initial walk by the guard to determine the visited coords
 	{
-		found := false
+		stopSearch := false
 		direction := []int{-1, 0}
-		position := []int{initalPosition[0], initalPosition[1]}
+		position := initalPosition
 
 		for {
-			if found {
+			if stopSearch {
 				break
 			}
 
 			for {
 				newPosition := []int{position[0] + direction[0], position[1] + direction[1]}
-				if newPosition[0] < 0 || newPosition[1] < 0 || newPosition[0] >= width || newPosition[1] >= height {
-					found = true
+				if !inBounds(newPosition[0], newPosition[1]) {
+					stopSearch = true
 					break
 				}
 
-				if matrix[newPosition[0]][newPosition[1]] == '#' {
+				c := coord(newPosition[0], newPosition[1])
+				if matrix[c] == '#' {
 					break
 				}
 
-				matrix[newPosition[0]][newPosition[1]] = 'X'
-				position = []int{newPosition[0], newPosition[1]}
+				if matrix[c] != 'X' {
+					matrix[c] = 'X'
+					visitedCoords = append(visitedCoords, newPosition)
+				}
+
+				position = newPosition
 			}
-			direction = []int{direction[1], 0 - direction[0]}
+			direction = rotate90Deg(direction)
 		}
 	}
 
-	blocks := 0
-	testMatrix := make([][]rune, height)
-	for i := range testMatrix {
-		testMatrix[i] = make([]rune, width)
-	}
+	workerCount := 50
+	jobs := make(chan []int, len(visitedCoords))
+	results := make(chan int, len(visitedCoords))
 
-	for x := range width {
-		for y := range height {
-			if matrix[x][y] != 'X' {
-				continue
-			}
+	for _ = range workerCount {
 
-			for i := range testMatrix {
-				copy(testMatrix[i], matrix[i])
-			}
+		// Go cpu.. gooooo brrr
+		go func() {
+			testMatrix := make([]rune, matrixSize)
 
-			found := false
-			directionId := 0
-			direction := []int{-1, 0}
-			position := []int{initalPosition[0], initalPosition[1]}
+			for check := range jobs {
+				copy(testMatrix, matrix)
 
-			testMatrix[x][y] = '#'
+				blocksFound := 0
 
-			for {
-				if found {
-					break
-				}
+				stopSearch := false
+				directionId := 0
+				direction := []int{-1, 0}
+				position := initalPosition
+
+				testMatrix[check[0]*width+check[1]] = '#'
 
 				for {
-					newPosition := []int{position[0] + direction[0], position[1] + direction[1]}
-					if newPosition[0] < 0 || newPosition[1] < 0 || newPosition[0] >= width || newPosition[1] >= height {
-						found = true
+					if stopSearch {
 						break
 					}
 
-					val := testMatrix[newPosition[0]][newPosition[1]]
-					if val == '#' {
-						break
+					for {
+						newPosition := []int{position[0] + direction[0], position[1] + direction[1]}
+						if !inBounds(newPosition[0], newPosition[1]) {
+							stopSearch = true
+							break
+						}
+
+						c := coord(newPosition[0], newPosition[1])
+
+						val := testMatrix[c]
+						if val == '#' {
+							break
+						}
+
+						// in a loop
+						if val == rune(directionId) {
+							blocksFound = 1
+							stopSearch = true
+							break
+						}
+
+						testMatrix[c] = rune(directionId)
+						position = newPosition
 					}
 
-					// in a loop
-					if val == rune(directionId) {
-						blocks += 1
-						found = true
-						break
-					}
-
-					if val == '#' {
-						break
-					}
-
-					testMatrix[newPosition[0]][newPosition[1]] = rune(directionId)
-
-					position = []int{newPosition[0], newPosition[1]}
+					direction = rotate90Deg(direction)
+					directionId = (directionId + 1) % 4
 				}
 
-				direction = []int{direction[1], 0 - direction[0]}
-				directionId = (directionId + 1) % 4
+				results <- blocksFound
 			}
-		}
+		}()
+	}
+
+	for i := 0; i < len(visitedCoords); i++ {
+		jobs <- visitedCoords[i]
+	}
+	close(jobs)
+
+	blocks := 0
+	for i := 0; i < len(visitedCoords); i++ {
+		blocks += <-results
 	}
 
 	fmt.Println(blocks)
