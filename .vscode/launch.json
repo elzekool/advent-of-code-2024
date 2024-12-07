@@ -1,9 +1,17 @@
 {
     "configurations": [
         {
-            "type": "node",
+            "name": "Debug Go",
+            "type": "go",
             "request": "launch",
-            "name": "Launch current script",
+            "mode": "debug",
+            "program": "${file}",
+            "cwd": "${fileDirname}"
+        },
+        {
+            "name": "Debug NodeJS",
+            "type": "node",
+            "request": "launch",            
             "program": "${file}",
             "cwd": "${fileDirname}"
         }
