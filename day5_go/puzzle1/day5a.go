@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	input, _ := os.ReadFile("input.txt")
+	input, _ := os.ReadFile("../input.txt")
 	blocks := strings.Split(string(input), "\n\n")
 
 	sorts := make(map[string]int)
