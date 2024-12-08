@@ -1,10 +1,10 @@
 const fs = require('node:fs');
-const input = fs.readFileSync('input.txt', 'utf8').trim().split('\n');
+const input = fs.readFileSync(__dirname + '/input.txt', 'utf8').trim().split('\n');
 
 const recursiveGetSolutions = (goal, remaining) => {
     // Check if we are a leaf
     if (remaining.length === 1) {
-        return [ remaining[0] ];
+        return remaining;
     }
 
     const value = remaining[remaining.length-1];

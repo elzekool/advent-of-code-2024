@@ -1,5 +1,5 @@
 const fs = require('node:fs');
-const input = fs.readFileSync('input.txt', 'utf8').trim();
+const input = fs.readFileSync(__dirname + '/input.txt', 'utf8').trim();
 
 const matrix = input.split('\n').map((row) => row.split(''));
 

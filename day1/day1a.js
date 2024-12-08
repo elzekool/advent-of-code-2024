@@ -1,6 +1,6 @@
 
 const fs = require('node:fs');
-const input = fs.readFileSync('input.txt', 'utf8').trim();
+const input = fs.readFileSync(__dirname + '/input.txt', 'utf8').trim();
 const items = input.split('\n').map(item => item.split('   ').map(n => Number.parseInt(n, 10)));
 
 const items_1 = items.map((item) => item[0]).sort();

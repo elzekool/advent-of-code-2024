@@ -1,5 +1,5 @@
 const fs = require('node:fs');
-const input = fs.readFileSync('input.txt', 'utf8').trim();
+const input = fs.readFileSync(__dirname + '/input.txt', 'utf8').trim();
 
 // const input = `7 6 4 2 1
 // 1 2 7 8 9

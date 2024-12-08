@@ -1,5 +1,5 @@
 const fs = require('node:fs');
-const input = fs.readFileSync('input.txt', 'utf8').trim().split('\n');
+const input = fs.readFileSync(__dirname + '/input.txt', 'utf8').trim().split('\n');
 
 const orders = {};
 const pages = [];

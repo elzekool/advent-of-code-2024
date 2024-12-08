@@ -1,5 +1,5 @@
 const fs = require('node:fs');
-const input = fs.readFileSync('input.txt', 'utf8').trim().split('\n');
+const input = fs.readFileSync(__dirname + '/input.txt', 'utf8').trim().split('\n');
 
 const recursiveGetSolutions = (goal, remaining) => {
     // Check if we are a leaf
@@ -13,7 +13,7 @@ const recursiveGetSolutions = (goal, remaining) => {
     return result = [
         ...nodes.map(n => n + value),
         ...nodes.map(n => n * value),
-        ...nodes.map(n => Number.parseInt(`${n}${value}`, 10))
+        ...nodes.map(n => (Math.pow(10, Math.log10(value+1)) * n) + value)
     ].filter(c => c <= goal);    
 }
 

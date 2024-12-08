@@ -1,5 +1,5 @@
 const fs = require('node:fs');
-const input = fs.readFileSync('input.txt', 'utf8').trim();
+const input = fs.readFileSync(__dirname + '/input.txt', 'utf8').trim();
 
 const regex = /mul\(([0-9]{1,3}),([0-9]{1,3})\)/g;
 
