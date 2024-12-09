@@ -16,7 +16,7 @@ Any damage to either machine, mental health (due to seeing the code) or hurted e
 ## Running the examples
 
 ### VS Code
-There is a `launch.json` in this repository. For any puzzle you should be able to run the puzzle in debug mode by the following steps:
+There is a `launch.json` in this repository. For any puzzle (except C++ variants) you should be able to run the puzzle in debug mode by the following steps:
 
 * Open the relevant puzzle file
 * Go to the debug tab (For me this `Ctrl` - `Shift` - `D`)
@@ -40,3 +40,16 @@ My experience with Go was zero before starting this AoC and I am using the puzzl
 * Put the input for the puzzle in a file called `input.txt` in the folder of the relevant day (And make sure you use Linux line endings!)
 * Change directory to the relevant puzzle (for example `cwd day7_go/puzzle2` to go to puzzle 2 of day 7)
 * Run the puzzle with `go run .`
+
+
+### C++
+
+Ow no.. C++, yes, C++, ... my experience with this is some very *bleep* Arduino code, so here we are. I have build and tested this under Linux with GCC
+and this compiled without issues, on other systems you are on your own :)
+
+#### Steps
+* Put the input for the puzzle in a file called `input.txt` in the folder of the relevant day (And make sure you use Linux line endings!)
+* Change directory to the relevant day (for example `cwd day9_cpp` to go to day 9)
+* Run `make`
+* Run one of the generated puzzle day executables
+
