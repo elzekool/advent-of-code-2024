@@ -1,9 +1,15 @@
 const fs = require('node:fs');
 const input = fs.readFileSync(__dirname + '/input.txt', 'utf8').trim();
 
+// Here we keep track of the blocks on the disk, every block has:
+// id: id of block, null if free space
+// size: size of block
 let blocks = [];
 
+// Here we keep track of the block ids encountered, this saves looking 
+// them up later
 let blockIds = [];
+
 let blockId = 0;
 let blockSize = null;
 input.split('').forEach(i => {
@@ -12,35 +18,27 @@ input.split('').forEach(i => {
         blockSize = j;
         return;
     }
-    blocks.push({
-        id: blockId,
-        size: blockSize      
-    });
-    blocks.push({
-        id: null,
-        size: j
-    });
+    // Add block for filled space
+    blocks.push({ id: blockId, size: blockSize });
+    // Add block for free space
+    blocks.push({ id: null, size: j });
     blockIds.push(blockId);
     blockSize = null;
+
+    // Keep track of our blockIds
     blockId++;
 });
 
+// The last block has no empty space character so add it now
 if (blockId !== null) {    
-    blocks.push({
-        id: blockId,
-        size: blockSize
-    });
-    blocks.push({
-        id: null,
-        size: 0
-    });
+    blocks.push({ id: blockId, size: blockSize });
     blockIds.push(blockId);
-    blockId = null;
 } else {
     blocks[blocks.length-1].sorted = true;
 }
 
 const printBlocks = () => {
+    // Remove for pretty picture :D
     return;
     let s = '';
     blocks.forEach((b) => {
@@ -55,12 +53,17 @@ const printBlocks = () => {
     console.log(s);
 }
 
+// Reverse block ids as we need to move items from high to low
 blockIds.reverse();
+
 blockIds.forEach((blockId) => {
     const filledBlockIdx = blocks.findIndex(({id}) => id === blockId);
     const filledBlock = blocks[filledBlockIdx];
+
+    // Search for an empty space before the block index with enough space
     const firstEmptyBlockIdx = blocks.findIndex(({ id, size }) => id === null && size >= filledBlock.size);
     if (firstEmptyBlockIdx === -1 || firstEmptyBlockIdx > filledBlockIdx) {
+        // No space, move to next block id
         return;
     }
 
@@ -68,27 +71,24 @@ blockIds.forEach((blockId) => {
 
     // scenario 1 -> free block size is same as filled block
     if (freeBlock.size === filledBlock.size) {
-        // Move blockId and reset block id of last block to null
-        blocks[firstEmptyBlockIdx].id = blocks[filledBlockIdx].id;
-        blocks[filledBlockIdx].id = null;
-        blocks[filledBlockIdx].sorted = true;
+        // Move block id and reset block id of last block to null
+        freeBlock.id = filledBlock.id;
+        filledBlock.id = null;
 
     // scenario 2 -> free block is larger then filled block}
     } else if (freeBlock.size > filledBlock.size) {
         const remainingFree = freeBlock.size - filledBlock.size;
+
+        // move block id and size from filled block
+        freeBlock.id = filledBlock.id;
+        freeBlock.size = filledBlock.size;
+        filledBlock.id = null;
+
+        // create new free block after it
         blocks.splice(firstEmptyBlockIdx+1, 0, {
             id: null,
-            size: remainingFree,
-            sorted: false,
-        });
-        blocks[firstEmptyBlockIdx].id = blocks[filledBlockIdx+1].id;
-        blocks[firstEmptyBlockIdx].size = blocks[filledBlockIdx+1].size;
-        blocks[filledBlockIdx+1].id = null;
-        blocks[filledBlockIdx+1].sorted = true;
-
-    // Ehh 
-    } else {
-        console.log("panick!");
+            size: remainingFree
+        });        
     }
 
     printBlocks();

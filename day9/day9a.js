@@ -1,6 +1,10 @@
 const fs = require('node:fs');
 const input = fs.readFileSync(__dirname + '/input.txt', 'utf8').trim();
 
+// Here we keep track of the blocks on the disk, every block has:
+// id: id of block, null if free space
+// size: size of block
+// sorted: is block sorted
 let blocks = [];
 
 let blockId = 0;
@@ -11,39 +15,26 @@ input.split('').forEach(i => {
         blockSize = j;
         return;
     }
-    blocks.push({
-        id: blockId,
-        size: blockSize,
-        sorted: false        
-    });
-    blocks.push({
-        id: null,
-        size: j,
-        sorted: false
-    });
+    // Add block for filled space
+    blocks.push({ id: blockId, size: blockSize, sorted: false });
+    // Add block for free space
+    blocks.push({ id: null, size: j, sorted: false });
     blockSize = null;
     blockId++;
 });
 
+// The last block has no empty space character so add it now
 if (blockId !== null) {
-    blocks.push({
-        id: blockId,
-        size: blockSize,
-        sorted: false,
-    });
-    blocks.push({
-        id: null,
-        size: 0,
-        sorted: true
-
-    });
+    blocks.push({ id: blockId, size: blockSize, sorted: false });
+    blocks.push({ id: null, size: 0, sorted: true });
     blockId = null;
 } else {
     blocks[blocks.length-1].sorted = true;
 }
 
 const printBlocks = () => {
-    return; 
+    // Remove for pretty picture :D
+    return;
 
     let s = '';
     blocks.forEach((b) => {
@@ -63,56 +54,58 @@ const printBlocks = () => {
     console.log(s);
 }
 
-let i = 0;
-
 printBlocks();
-
 while (true) {
-    const firstEmptyBlockIdx = blocks.findIndex(({id, size}) => id === null && size > 0);
+    const firstFreeBlockIdx = blocks.findIndex(({id, size}) => id === null && size > 0);
     const lastFilledBlockIdx = blocks.findLastIndex(({id, size}) => id !== null && size > 0);
 
-    if (blocks[firstEmptyBlockIdx].sorted) {
+    // We are done when the first free block is sorted
+    if (blocks[firstFreeBlockIdx].sorted) {
         break;
     }
 
-    const freeBlock = blocks[firstEmptyBlockIdx];
+    const freeBlock = blocks[firstFreeBlockIdx];
     const filledBlock = blocks[lastFilledBlockIdx];
 
     // scenario 1 -> free block size is same as filled block
     if (freeBlock.size === filledBlock.size) {
         // Move blockId and reset block id of last block to null
-        blocks[firstEmptyBlockIdx].id = blocks[lastFilledBlockIdx].id;
-        blocks[lastFilledBlockIdx].id = null;
-        blocks[lastFilledBlockIdx].sorted = true;
+        freeBlock.id = filledBlock.id;
+        filledBlock.id = null;
+        filledBlock.sorted = true;
     
     // scenario 2 -> free block is smaller then filled block
     } else if(freeBlock.size < filledBlock.size) {
-        const toMove = freeBlock.size;
-        blocks[firstEmptyBlockIdx].id = blocks[lastFilledBlockIdx].id;
-        blocks[lastFilledBlockIdx].size -= toMove;
+        // Move block Id
+        freeBlock.id = filledBlock.id;
+        // Split last block in filled and free block based on copied size
+        filledBlock.size -= freeBlock.size;
         blocks.splice(lastFilledBlockIdx+1, 0, {
             id: null,
-            size: toMove,
+            size: freeBlock.size,
             sorted: true
         });
     // scenario 3 -> free block is larger then filled block}
     } else if (freeBlock.size > filledBlock.size) {
         const remainingFree = freeBlock.size - filledBlock.size;
-        blocks.splice(firstEmptyBlockIdx+1, 0, {
+        
+        // Move block id and reduce size to copied data
+        freeBlock.id = filledBlock.id;
+        freeBlock.size = filledBlock.size;
+
+        // Create free block after it of remaining free space
+        blocks.splice(firstFreeBlockIdx+1, 0, {
             id: null,
             size: remainingFree,
             sorted: false,
         });
-        blocks[firstEmptyBlockIdx].id = blocks[lastFilledBlockIdx+1].id;
-        blocks[firstEmptyBlockIdx].size = blocks[lastFilledBlockIdx+1].size;
-        blocks[lastFilledBlockIdx+1].id = null;
-        blocks[lastFilledBlockIdx+1].sorted = true;
 
-    // Ehh 
-    } else {
-        console.log("panick!");
+        // Set original free block to free
+        filledBlock.id = null;
+        filledBlock.sorted = true;
     }
 
+    // Check if there is a free block at the end we can consider sorted
     const lastEmptyNonSortedBlockIdx = blocks.findLastIndex(({id, sorted}) => id === null && sorted === false);
     if (blocks[lastEmptyNonSortedBlockIdx+1].id === null && blocks[lastEmptyNonSortedBlockIdx+1].sorted) {
         blocks[lastEmptyNonSortedBlockIdx].sorted = true;
