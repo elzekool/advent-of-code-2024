@@ -54,11 +54,18 @@ const printBlocks = () => {
     console.log(s);
 }
 
+// Create and fill pointer to first free block
+let firstFreeBlockIdx;
+searchForFirstFreeBlock = () => { firstFreeBlockIdx = blocks.findIndex(({id, size}) => id === null && size > 0); }
+searchForFirstFreeBlock();
+
+// Create and fill pointer to last filled block
+let lastFilledBlockIdx;
+searchForLastFilledBlockIdx = () => { lastFilledBlockIdx = blocks.findLastIndex(({id, size}) => id !== null && size > 0) }
+searchForLastFilledBlockIdx();
+
 printBlocks();
 while (true) {
-    const firstFreeBlockIdx = blocks.findIndex(({id, size}) => id === null && size > 0);
-    const lastFilledBlockIdx = blocks.findLastIndex(({id, size}) => id !== null && size > 0);
-
     // We are done when the first free block is sorted
     if (blocks[firstFreeBlockIdx].sorted) {
         break;
@@ -73,6 +80,15 @@ while (true) {
         freeBlock.id = filledBlock.id;
         filledBlock.id = null;
         filledBlock.sorted = true;
+
+        // Both blocks have changed, we need to search for new blocks
+        searchForFirstFreeBlock();
+        searchForLastFilledBlockIdx();
+
+        // Now we moved the last filled block, check if any block after is considered sorted
+        if (blocks[lastFilledBlockIdx+1].id === null) {
+            blocks[lastFilledBlockIdx+1].sorted = true;
+        }
     
     // scenario 2 -> free block is smaller then filled block
     } else if(freeBlock.size < filledBlock.size) {
@@ -85,6 +101,10 @@ while (true) {
             size: freeBlock.size,
             sorted: true
         });
+
+        // We filled the free block, search for the next one
+        searchForFirstFreeBlock();
+        
     // scenario 3 -> free block is larger then filled block}
     } else if (freeBlock.size > filledBlock.size) {
         const remainingFree = freeBlock.size - filledBlock.size;
@@ -103,12 +123,16 @@ while (true) {
         // Set original free block to free
         filledBlock.id = null;
         filledBlock.sorted = true;
-    }
 
-    // Check if there is a free block at the end we can consider sorted
-    const lastEmptyNonSortedBlockIdx = blocks.findLastIndex(({id, sorted}) => id === null && sorted === false);
-    if (blocks[lastEmptyNonSortedBlockIdx+1].id === null && blocks[lastEmptyNonSortedBlockIdx+1].sorted) {
-        blocks[lastEmptyNonSortedBlockIdx].sorted = true;
+        // Move the free block pointer to our new block
+        // and search for the last filled block
+        firstFreeBlockIdx++;
+        searchForLastFilledBlockIdx();
+
+        // Now we moved the last filled block, check if any block after is considered sorted
+        if (blocks[lastFilledBlockIdx+1].id === null) {
+            blocks[lastFilledBlockIdx+1].sorted = true;
+        }
     }
 
     printBlocks();
