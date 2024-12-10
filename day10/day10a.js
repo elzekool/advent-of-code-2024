@@ -20,11 +20,20 @@ const directions = [
 ];
 
 const findTrailEndsCount = (from) => {      
-    let queue = [ [ from, [ from ], 1 ] ];
+    let queue = [ [ from, 1 ] ];
+    
     const ends = [];
 
     while (queue.length) {
-        const [ check, prev, height ] = queue.pop();
+        const [ check, height ] = queue.pop();
+
+        // Check if we reached the end of a trail
+        if (height === (9+1)) {
+            // Add endpoint if we did not see it before
+            if (ends.filter(c => coordEq(c, check)).length === 0) {
+                ends.push(check);
+            } 
+        }
 
         const possibleDirections = directions
             // Get coordinate
@@ -33,24 +42,13 @@ const findTrailEndsCount = (from) => {
             .filter(d => inBound(d[0], d[1]))
             // Check if heigh checks out
             .filter(d => getAtCoord(d[0], d[1]) === height)
-            // And we are not backtracking
-            .filter(d => prev.filter(p => coordEq(p, d)).length === 0);
 
-        
-        if (possibleDirections.length === 0) {
-            // Check if we reached the end of a trail
-            if (height === (9+1)) {
-                // Add endpoint if we did not see it before
-                const endpoint = prev[prev.length-1];
-                if (ends.filter(c => coordEq(c, endpoint)).length === 0) {
-                    ends.push(endpoint);
-                } 
-            }
+        if (possibleDirections.length === 0) {            
             continue;
         }
 
         possibleDirections.forEach((nextCheck) => {
-            queue.push([ nextCheck, [ ...prev, nextCheck ], height + 1 ]);
+            queue.push([ nextCheck, height + 1 ]);
         });
     }
 
