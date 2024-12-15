@@ -54,6 +54,11 @@ const moveRobot = (direction) => {
         return;
     }
 
+    // Quick check, are we moving into a wall?
+    if (getAtCoord(posX, posY) === '#') {
+        return;
+    }
+
     while(inBound(posX, posY)) {
         line += getAtCoord(posX, posY);
         posX += dirX;

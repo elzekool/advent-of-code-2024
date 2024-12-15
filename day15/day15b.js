@@ -67,25 +67,24 @@ const moveRobot = (direction) => {
         return;
     }
 
-    while(inBound(posX, posY)) {
-        line += getAtCoord(posX, posY);
-        posX += dirX;
-        posY += dirY;    
-    }
-
-    
-    // Reduce the line to the first wall
-    if (line.includes('#')) {
-        line = line.substring(0, line.indexOf('#'));
-    }
-
-    // Move not possible
-    if (!line.includes('.')) {
-        return;
-    }
-
     // In the X dir we can re-use what we have done
-    if (dirY === 0) {
+    if (dirY === 0) {    
+        while(inBound(posX, posY)) {
+            line += getAtCoord(posX, posY);
+            posX += dirX;
+            posY += dirY;    
+        }
+        
+        // Reduce the line to the first wall
+        if (line.includes('#')) {
+            line = line.substring(0, line.indexOf('#'));
+        }
+
+        // Move not possible
+        if (!line.includes('.')) {
+            return;
+        }
+        
         const freeSlotOffset = line.indexOf('.') + 1;
         line = '.' + line.substring(0, freeSlotOffset-1) + line.substring(freeSlotOffset);
         [ posX, posY ] = robotPos;
@@ -101,9 +100,8 @@ const moveRobot = (direction) => {
     }
 
     // Find the position of our first box
-    let boxL = line.charAt(0) === ']' ? (robotPos[0] - 1) : robotPos[0];
-    let boxR = line.charAt(0) === '[' ? (robotPos[0] + 1) : robotPos[0];    
-    posY = robotPos[1] + dirY;
+    let boxL = getAtCoord(posX, posY) === ']' ? (robotPos[0] - 1) : robotPos[0];
+    let boxR = getAtCoord(posX, posY) === '[' ? (robotPos[0] + 1) : robotPos[0];    
     const lines = [
         [ posY, [ [ boxL, boxR ] ] ]
     ];
