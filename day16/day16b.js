@@ -6,9 +6,9 @@ let costMatrix = input.split('\n').map((row) => row.split('').map(() => Number.M
 let visitMatrix = input.split('\n').map((row) => row.split('').map(() => false));
 
 const directions = [
-    (x, y) => ([  x,  y,    1 ]),  // Forward
-    (x, y) => ([ -y,  x, 1001 ]),  // Left + Forward 
-    (x, y) => ([  y, -x, 1001 ]),  // Right + Forward
+    (x, y) => ([  x,  y,    1, false ]),  // Forward
+    (x, y) => ([ -y,  x, 1001, false ]),  // Left + Forward 
+    (x, y) => ([  y, -x, 1001, true  ]),  // Right + Forward
 ]
 
 const width = matrix[0].length;
@@ -111,7 +111,7 @@ const searchMatrix = (queue, allPaths) => {
         }
     
         directions.forEach((directionFn) => {
-            const [ testDirX, testDirY, directionCost ] = directionFn(dirX, dirY);
+            const [ testDirX, testDirY, directionCost, preferred ] = directionFn(dirX, dirY);
             const newX = x + testDirX;
             const newY = y + testDirY;
     
@@ -124,7 +124,11 @@ const searchMatrix = (queue, allPaths) => {
                 return;
             }
     
-            queue.unshift([newX, newY, testDirX, testDirY, cost + directionCost, c, [ ...path, [ newX, newY ]] ]);
+            if (preferred) {
+                queue.unshift([newX, newY, testDirX, testDirY, cost + directionCost, c, [ ...path, [ newX, newY ]] ]);
+            } else {
+                queue.push([newX, newY, testDirX, testDirY, cost + directionCost, c, [ ...path, [ newX, newY ]] ]);
+            }
         });
     }
 }
