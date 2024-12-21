@@ -1,6 +1,8 @@
 const fs = require('node:fs');
 const input = fs.readFileSync(__dirname + '/input.txt', 'utf8').trim();
 
+const robots = 25;
+
 const numpad = [
     [ '7', '8', '9' ],
     [ '4', '5', '6' ],
@@ -74,7 +76,7 @@ const findShortestPaths = (matrix, startX, startY, endX, endY) => {
             }
         })
     }
-    
+
     const minTurns = paths.reduce((acc, val) => {
         const turns = calcTurns(val);
         return (acc > turns) ? turns: acc;
@@ -111,47 +113,54 @@ const numpadPaths = calculateAllPaths(numpad);
 // and also the distance needed to travel 
 const dirpadPaths = calculateAllPaths(dirpad);
 
-// Get all keypress options for a set of keypressed on a given
-// keypad. Has the ability to only return a single option
-const findOptionsFor = (pad, keypresses, firstOnly = false) => {
-    let remaining = keypresses;
-    let last = 'A';
-    let options = [
-        ''
-    ];
-    while(remaining.length > 0) {
-        const next = remaining.substring(0, 1);
-        remaining = remaining.substring(1);
-        let paths = [ ...pad[last + next] ];
-        if (firstOnly) {
-            const shortestPath = paths[0];
-            options[0] = options[0] + shortestPath;
-        } else {
-            for (let x = options.length-1; x >= 0; x--) {
-                const newPath = paths.map((path) => options[x] + path);
-                options.splice(x, 1, ...newPath);
-            }
-        }
-        last = next;
+// Keep track of of the last pressed button in the chain
+// We do this for all the robots + one human
+const lastPressedButton = [];
+for(let x = 0; x < robots+1; x++) {
+    lastPressedButton.push('A');
+}
+
+const memo = {};
+const calculateCostRecursive = (button, level = 0) => {
+    // Get cache key
+    const key = `${level}|${lastPressedButton[level]}${button}`;
+    if (typeof memo[key] !== "undefined") {
+        lastPressedButton[level] = button;
+        return memo[key];
     }
-    return options;
+
+    // If we are a human we can just press the button
+    if (level === robots+1) {
+        return button.length;
+    }
+    
+    // Determine keypad to use, we start from the end of the chain 
+    // as that is our input so start with the numeric keypad
+    const keypad = (level === 0) ? numpadPaths : dirpadPaths;
+
+    // Get key combinations that we could press
+    const combinations = keypad[lastPressedButton[level] + button];
+
+    // Go through each combination and see which has the minimal cost
+    let minCost = Number.MAX_SAFE_INTEGER;
+    combinations.forEach((path) => {
+        let cost = 0;
+        // No press buttons, we need to expand until we got to the human-
+        path.split('').forEach((pathButton) => {
+            cost += calculateCostRecursive(pathButton, level+1);
+        });
+        // This path is cheapest
+        if (cost < minCost) {
+            minCost = cost;
+        }
+    });
+
+    lastPressedButton[level] = button;
+    return memo[key] = minCost;
 }
 
 const calculateKeyPad = (keypadNum) => {
-    const numpadOptions = findOptionsFor(numpadPaths, keypadNum);
-    let dirpad1Options = [];
-
-    numpadOptions.forEach(numpadOption => {
-        const options = findOptionsFor(dirpadPaths, numpadOption);
-        options.forEach(option => {
-            dirpad1Options.push(option);
-        })
-    });
-
-    const minCost = dirpad1Options.reduce((acc, val) => {
-        const cost = (findOptionsFor(dirpadPaths, val, true)[0]).length;
-        return (acc > cost) ? cost : acc;
-    }, Number.MAX_SAFE_INTEGER);
+    const minCost = keypadNum.split('').reduce((acc, val) => acc + calculateCostRecursive(val), 0);
     return Number.parseInt(keypadNum.replaceAll(/[^0-9]+/g, ''), 10) * minCost;
 }
 
