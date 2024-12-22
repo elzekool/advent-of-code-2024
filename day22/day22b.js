@@ -5,11 +5,11 @@ const mix = (a, b) => Number(BigInt(a) ^ BigInt(b));
 const prune = (a) => a % 16777216;
 
 const k = (a, b, c, d) => {
-    return `${a === 0 ? '0' : a.toFixed(0)}|${b === 0 ? '0' : b.toFixed(0)}|${c === 0 ? '0' : c.toFixed(0)}|${d === 0 ? '0' : d.toFixed(0)}`;
+    return `${a === 0 ? '0' : a.toFixed(0)},${b === 0 ? '0' : b.toFixed(0)},${c === 0 ? '0' : c.toFixed(0)},${d === 0 ? '0' : d.toFixed(0)}`;
 }
 
 const bananas = {};
-let rounds = 2000 - 1;
+let rounds = 2000;
 
 input.split('\n').map(n => Number.parseInt(n.trim())).forEach(n => {
     let seed = n;
@@ -25,22 +25,20 @@ input.split('\n').map(n => Number.parseInt(n.trim())).forEach(n => {
         last = seed % 10;
     }
 
+    let combinations = {};
     for (let x = 3; x < rounds; x++) {        
-        const key = k(diffs[x-3], diffs[x-2], diffs[x-1], diffs[x]);
-        if (typeof bananas[key] === "undefined") {
-            bananas[key] = {};
+        const key = k(diffs[x-3], diffs[x-2], diffs[x-1], diffs[x]);        
+        if (combinations[key]) {
+            continue;
         }
+        combinations[key] = true;
         const price = prices[x];
-        const current = typeof bananas[key][n] !== "undefined" ? bananas[key][n] : 0;
-        if (price > current) {
-            bananas[key][n] = price;
-        }
-    }    
+        bananas[key] = (bananas[key] ?? 0) + price;     
+    }        
 });
 
 let max = 0;
-Object.values(bananas).forEach((set) => {    
-    const val = Object.values(set).reduce((acc, val) => acc + val, 0);
+Object.values(bananas).forEach((val) => {
     if (val > max) {
         max = val;
     }
